@@ -7,15 +7,22 @@ node_list=$(yarn node -list)
 internal_addresses=$(echo "$node_list" | grep -oE 'ip-[0-9]+-[0-9]+-[0-9]+-[0-9]+')
 
 # Convert internal addresses to valid IP addresses
-valid_ip_addresses=""
+declare -A ip_address_map
+count=0
 for internal_address in $internal_addresses; do
     # Extract the IP octets
     ip_octets=$(echo "$internal_address" | sed 's/ip-\([0-9]\+\)-\([0-9]\+\)-\([0-9]\+\)-\([0-9]\+\)/\1.\2.\3.\4/')
 
-    # Append the valid IP address to the result
-    valid_ip_addresses+="$ip_octets "
+    # Add the IP address to the map if it doesn't exist
+    if [[ ! "${ip_address_map[$ip_octets]}" ]]; then
+        ip_address_map[$ip_octets]=1
+        ((count++))
+    fi
 done
 
-# Print the valid IP addresses
+# Print the unique valid IP addresses and node count
 echo "Valid IP Addresses:"
-echo "$valid_ip_addresses"
+for ip_address in "${!ip_address_map[@]}"; do
+    echo "$ip_address"
+done
+echo "Number of Nodes: $count"
